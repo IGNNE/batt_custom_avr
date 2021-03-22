@@ -31,17 +31,6 @@
  *
  ****************************************************************************/
 
-/**
- * @file batt_smbus.h
- *
- * Header for a battery monitor connected via SMBus (I2C).
- * Designed for BQ40Z50-R1/R2 and BQ40Z80
- *
- * @author Jacob Dahl <dahl.jakejacob@gmail.com>
- * @author Alex Klimaj <alexklimaj@gmail.com>
- * @author Bazooka Joe <BazookaJoe1900@gmail.com>
- *
- */
 
 #include "batt_custom_avr.h"
 
@@ -65,8 +54,19 @@ int BatteryCustomAvr::init()
     int ret = I2C::init();
 
     if (ret != PX4_OK) {
-        DEVICE_DEBUG("I2C::init failed: (%i)", ret);
+        PX4_WARN("I2C::init failed: (%i)", ret);
     }
+
+    uint8_t id_address = 0;
+	uint8_t id_value = 0;
+        // for some reason, my avr needs two separate tranfers
+    // first write the "register"/key, then read the date
+    ret = transfer(&id_address, 1, nullptr, 0);
+    ret += transfer(nullptr, 0, &id_value, 1);
+    if (ret != PX4_OK || id_value != I2C_DEFAULT_ADDRESS) {
+        PX4_WARN("Controller does not respond, address returned %i, should be %i", id_value, I2C_DEFAULT_ADDRESS);
+    }
+
     return ret;
 }
 
@@ -77,7 +77,7 @@ void BatteryCustomAvr::RunImpl()
     int ret = PX4_OK;
 
     uint8_t tempval = 0;
-    // for some reason, my arduino needs two separate tranfers
+    // for some reason, my avr needs two separate tranfers
     // first write the "register"/key, then read the date
     ret = transfer(&BATTERY_REGISTER, 1, nullptr, 0);
     ret += transfer(nullptr, 0, &tempval, 1);
@@ -99,9 +99,11 @@ void BatteryCustomAvr::RunImpl()
         battery_status_s new_report = {};
         new_report.timestamp = hrt_absolute_time();
         new_report.connected = true;
+        new_report.cell_count = CELL_COUNT;
 
         float avg_value_V = sum_values_V/3;
-        new_report.voltage_v = avg_value_V;
+        // HACK:
+        new_report.voltage_v  = new_report.voltage_cell_v[0] = avg_value_V;
         if(avg_value_V > LOW_V) {
             new_report.warning = battery_status_s::BATTERY_WARNING_NONE;
         } else if(avg_value_V > CRITICAL_V) {
@@ -115,7 +117,7 @@ void BatteryCustomAvr::RunImpl()
         orb_publish(ORB_ID(battery_status), battery_topic, &new_report);
     } else {
         // something broke
-        PX4_ERR("Can't access battery sensor: transfer result %x, register content %x", ret, tempval);
+        PX4_WARN("Can't access battery sensor: transfer result %x, register content %x", ret, tempval);
     }
 }
 

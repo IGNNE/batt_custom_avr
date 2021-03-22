@@ -94,10 +94,11 @@ private:
 
     /** voltage range for the adc values */
     constexpr static float VOLTAGE_RANGE = 5.0;
+    constexpr static uint8_t CELL_COUNT = 1;
 
     // just to be safe, here are some default values for 1S lipos
     constexpr static float LOW_V = 3.6;
     constexpr static float CRITICAL_V = 3.5;
-    constexpr static float EMERGENCY_V = 3.3;
+    constexpr static float EMERGENCY_V = 3.2;
 
 };
