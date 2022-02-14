@@ -36,9 +36,9 @@
 
 extern "C" __EXPORT int batt_custom_avr_main(int argc, char *argv[]);
 
-BatteryCustomAvr::BatteryCustomAvr(I2CSPIBusOption bus_option, const int bus, int bus_frequency) :
-    I2C(DRV_BAT_CUSTOM_AVR, MODULE_NAME, bus, I2C_DEFAULT_ADDRESS, bus_frequency),
-    I2CSPIDriver(MODULE_NAME, px4::device_bus_to_wq(get_device_id()), bus_option, bus, I2C_DEFAULT_ADDRESS)
+BatteryCustomAvr::BatteryCustomAvr(const I2CSPIDriverConfig &config) :
+    I2C(config),
+    I2CSPIDriver(config)
 {
     battery_status_s new_report = {};
     battery_topic = orb_advertise(ORB_ID(battery_status), &new_report);
@@ -59,7 +59,7 @@ int BatteryCustomAvr::init()
 
     uint8_t id_address = 0;
 	uint8_t id_value = 0;
-        // for some reason, my avr needs two separate tranfers
+    // for some reason, my avr needs two separate tranfers
     // first write the "register"/key, then read the date
     ret = transfer(&id_address, 1, nullptr, 0);
     ret += transfer(nullptr, 0, &id_value, 1);
@@ -136,10 +136,10 @@ void BatteryCustomAvr::print_usage()
         PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
 }
 
-I2CSPIDriverBase *BatteryCustomAvr::instantiate(const BusCLIArguments &cli, const BusInstanceIterator &iterator,
+I2CSPIDriverBase *BatteryCustomAvr::instantiate(const I2CSPIDriverConfig &config,
                                       int runtime_instance)
 {
-    BatteryCustomAvr * instance = new BatteryCustomAvr(iterator.configuredBusOption(), iterator.bus(), cli.bus_frequency);
+    BatteryCustomAvr * instance = new BatteryCustomAvr(config);
     if (!instance) {
         PX4_ERR("alloc failed");
         return nullptr;

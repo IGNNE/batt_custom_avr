@@ -1,4 +1,4 @@
-menuconfig DRIVERS_BAT_CUSTOM_AVR
+menuconfig DRIVERS_BATT_CUSTOM_AVR
 	bool "batt_custom_avr"
 	default n
 	---help---

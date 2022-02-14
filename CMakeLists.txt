@@ -31,7 +31,7 @@
 #
 ############################################################################
 px4_add_module(
-	MODULE drivers_batt_custom_avr
+	MODULE batt_custom_avr
 	MAIN batt_custom_avr
 	COMPILE_FLAGS
 	SRCS

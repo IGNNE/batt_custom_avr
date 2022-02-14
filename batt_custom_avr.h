@@ -54,13 +54,13 @@ using namespace time_literals;
 class BatteryCustomAvr : public device::I2C, public I2CSPIDriver<BatteryCustomAvr>
 {
 public:
-    BatteryCustomAvr(I2CSPIBusOption bus_option, const int bus, int bus_frequency);
+    BatteryCustomAvr(const I2CSPIDriverConfig &config);
 
     ~BatteryCustomAvr();
 
     int init();
 
-    static I2CSPIDriverBase *instantiate(const BusCLIArguments &cli, const BusInstanceIterator &iterator,
+    static I2CSPIDriverBase *instantiate(const I2CSPIDriverConfig &config,
                          int runtime_instance);
     static void print_usage();
 
